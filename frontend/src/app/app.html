@@ -1,0 +1,289 @@
+@if (!auth.isAuthenticated) {
+  <main class="login-layout">
+    <section class="login-story">
+      <a class="brand brand-light" href="#" aria-label="Paperly home">
+        <span class="brand-mark">P</span>
+        <span>paper<span class="brand-accent">ly</span></span>
+      </a>
+      <div class="story-copy">
+        <span class="eyebrow eyebrow-light">THE SMARTER WAY TO SET EXAMS</span>
+        <h1>Better papers.<br /><span>Less busywork.</span></h1>
+        <p>Build balanced, ready-to-share question papers from your question bank in just a few clicks.</p>
+        <div class="story-points">
+          <div><span class="check-mark">✓</span> Balance marks by topic and difficulty</div>
+          <div><span class="check-mark">✓</span> Keep every question in one place</div>
+          <div><span class="check-mark">✓</span> Download print-ready papers</div>
+        </div>
+      </div>
+      <div class="story-footer">Thoughtfully made for educators.</div>
+    </section>
+    <section class="login-panel">
+      <div class="login-card">
+        <div class="mobile-brand brand">
+          <span class="brand-mark">P</span>
+          <span>paper<span class="brand-accent">ly</span></span>
+        </div>
+        <span class="eyebrow">WELCOME BACK</span>
+        <h2>Sign in to your workspace</h2>
+        <p class="muted">Use your faculty or administrator account to continue.</p>
+        @if (loginError) {
+          <div class="alert alert-error" role="alert">{{ loginError }}</div>
+        }
+        <form (ngSubmit)="login()" #loginForm="ngForm">
+          <label class="field-label" for="login-username">Username</label>
+          <input id="login-username" name="username" [(ngModel)]="loginUsername" required autocomplete="username" placeholder="Enter your username" />
+          <label class="field-label" for="login-password">Password</label>
+          <input id="login-password" name="password" [(ngModel)]="loginPassword" required type="password" autocomplete="current-password" placeholder="Enter your password" />
+          <button class="button button-primary button-wide login-submit" type="submit" [disabled]="loginForm.invalid || loginBusy">
+            @if (loginBusy) { Signing in… } @else { Sign in <span aria-hidden="true">→</span> }
+          </button>
+        </form>
+        <div class="login-help"><span class="lock-icon">⌑</span> Your workspace is secured with encrypted sign-in.</div>
+      </div>
+      <div class="login-copyright">© 2025 Paperly · Question paper workspace</div>
+    </section>
+  </main>
+} @else {
+  <div class="app-shell">
+    <aside class="sidebar">
+      <a class="brand sidebar-brand" href="#" (click)="$event.preventDefault(); navigate('overview')">
+        <span class="brand-mark">P</span>
+        <span>paper<span class="brand-accent">ly</span></span>
+      </a>
+      <div class="workspace-label">WORKSPACE</div>
+      <nav class="main-nav" aria-label="Main navigation">
+        @for (item of navItems; track item.id) {
+          @if (!item.adminOnly || isAdmin) {
+          <button type="button" class="nav-link" [class.active]="page === item.id" (click)="navigate(item.id)">
+            <span class="nav-icon">{{ item.icon }}</span>
+            <span>{{ item.label }}</span>
+            @if (item.id === 'questions') { <span class="nav-count">{{ questions.length }}</span> }
+          </button>
+          }
+        }
+      </nav>
+      <div class="sidebar-bottom">
+        <div class="sidebar-tip">
+          <span class="tip-sparkle">✳</span>
+          <strong>A little tip</strong>
+          <p>Tag questions by topic to create a more balanced paper.</p>
+        </div>
+        <button type="button" class="profile-button" (click)="logout()">
+          <span class="avatar">{{ auth.username.charAt(0).toUpperCase() }}</span>
+          <span class="profile-copy"><strong>{{ auth.username }}</strong><small>{{ auth.role === 'ADMIN' ? 'Administrator' : 'Faculty' }}</small></span>
+          <span class="profile-exit" aria-label="Sign out">↗</span>
+        </button>
+      </div>
+    </aside>
+
+    <main class="main-area">
+      <header class="topbar">
+        <div class="breadcrumb"><span>Workspace</span><span class="crumb-separator">/</span><strong>{{ page === 'overview' ? 'Overview' : page === 'questions' ? 'Question bank' : page === 'subjects' ? 'Subjects' : page === 'generate' ? 'Generate paper' : page === 'users' ? 'User management' : 'Paper history' }}</strong></div>
+        <div class="topbar-actions">
+          <span class="today-label">{{ 'Today' }}</span>
+          <span class="topbar-divider"></span>
+          <span class="avatar avatar-small">{{ auth.username.charAt(0).toUpperCase() }}</span>
+          <span class="topbar-username">{{ auth.username }}</span>
+        </div>
+      </header>
+
+      <div class="page-content">
+        @if (error) {
+          <div class="alert alert-error page-alert" role="alert"><span>!</span>{{ error }}<button type="button" (click)="error = ''" aria-label="Dismiss">×</button></div>
+        }
+        @if (notice) {
+          <div class="alert alert-success page-alert" role="status"><span>✓</span>{{ notice }}<button type="button" (click)="notice = ''" aria-label="Dismiss">×</button></div>
+        }
+
+        @if (page === 'overview') {
+          <div class="page-heading heading-with-action">
+            <div><span class="eyebrow">YOUR TEACHING WORKSPACE</span><h1>Good to see you, {{ auth.username }} <span class="wave">✳</span></h1><p>Everything you need to put together a great question paper.</p></div>
+            <button type="button" class="button button-primary" (click)="navigate('generate')"><span>✳</span> Create a paper</button>
+          </div>
+          <section class="stat-grid" aria-label="Workspace statistics">
+            <article class="stat-card stat-card-lilac"><span class="stat-icon">▤</span><span class="stat-label">QUESTIONS IN BANK</span><strong>{{ questions.length }}</strong><small>Across all subjects</small></article>
+            <article class="stat-card stat-card-peach"><span class="stat-icon">◫</span><span class="stat-label">SUBJECTS</span><strong>{{ subjects.length }}</strong><small>Ready to build from</small></article>
+            <article class="stat-card stat-card-mint"><span class="stat-icon">◷</span><span class="stat-label">PAPERS CREATED</span><strong>{{ papers.length }}</strong><small>Available in your history</small></article>
+          </section>
+          <div class="overview-grid">
+            <section class="panel recent-panel">
+              <div class="panel-heading"><div><h2>Recently created</h2><p>Your latest question papers</p></div><button type="button" class="text-button" (click)="navigate('papers')">View all <span>→</span></button></div>
+              @if (papers.length) {
+                <div class="paper-list">
+                  @for (paper of papers.slice(0, 4); track paper.id) {
+                    <div class="paper-row">
+                      <span class="paper-icon">▤</span>
+                      <span class="paper-info"><strong>{{ paper.title }}</strong><small>{{ paper.subjectName || subjectName(paper.subjectId) }} · {{ paper.totalMarks }} marks</small></span>
+                      <button type="button" class="icon-button" (click)="downloadPaper(paper)" aria-label="Download PDF">↓</button>
+                    </div>
+                  }
+                </div>
+              } @else {
+                <div class="empty-state compact-empty"><span class="empty-illustration">◷</span><strong>No papers just yet</strong><p>Your generated papers will show up here.</p><button class="text-button" type="button" (click)="navigate('generate')">Create your first paper →</button></div>
+              }
+            </section>
+            <section class="panel quick-panel">
+              <div class="panel-heading"><div><h2>Quick start</h2><p>Pick up right where you left off</p></div></div>
+              <button type="button" class="quick-link" (click)="navigate('questions')"><span class="quick-icon quick-lilac">＋</span><span><strong>Add questions</strong><small>Grow your question bank</small></span><span class="quick-arrow">→</span></button>
+              @if (isAdmin) {
+                <button type="button" class="quick-link" (click)="navigate('subjects')"><span class="quick-icon quick-peach">◫</span><span><strong>Manage subjects</strong><small>Organize your curriculum</small></span><span class="quick-arrow">→</span></button>
+              }
+              <button type="button" class="quick-link" (click)="navigate('generate')"><span class="quick-icon quick-mint">✳</span><span><strong>Build a paper</strong><small>Set marks and difficulty</small></span><span class="quick-arrow">→</span></button>
+            </section>
+          </div>
+        }
+
+        @if (page === 'questions') {
+          <div class="page-heading heading-with-action">
+            <div><span class="eyebrow">YOUR LIBRARY</span><h1>Question bank</h1><p>Keep your questions organized, searchable, and ready for the next paper.</p></div>
+            <button type="button" class="button button-primary" (click)="openNewQuestion()" [disabled]="!subjects.length"><span>＋</span> Add a question</button>
+          </div>
+          <section class="panel table-panel">
+            <div class="table-toolbar">
+              <div class="search-box"><span>⌕</span><input aria-label="Search questions" [(ngModel)]="searchText" placeholder="Search questions, topics…" /></div>
+              <select aria-label="Filter by subject" [(ngModel)]="questionSubjectFilter"><option value="">All subjects</option>@for (subject of subjects; track subject.id) { <option [value]="subject.id">{{ subject.name }}</option> }</select>
+              <select aria-label="Filter by difficulty" [(ngModel)]="questionDifficultyFilter"><option value="">All difficulties</option>@for (difficulty of difficulties; track difficulty) { <option [value]="difficulty">{{ difficulty }}</option> }</select>
+              <span class="result-count">{{ filteredQuestions.length }} questions</span>
+            </div>
+            @if (filteredQuestions.length) {
+              <div class="table-scroll"><table><thead><tr><th>QUESTION</th><th>SUBJECT / TOPIC</th><th>DIFFICULTY</th><th>MARKS</th><th><span class="visually-hidden">Actions</span></th></tr></thead>
+                <tbody>@for (question of filteredQuestions; track question.id) {
+                  <tr><td class="question-cell"><span class="question-text">{{ question.questionText }}</span></td><td><span class="subject-text">{{ question.subjectName || subjectName(question.subjectId) }}</span><small class="table-subtext">{{ question.topic }}</small></td><td><span class="difficulty-badge" [class]=" 'difficulty-badge difficulty-' + question.difficultyLevel.toLowerCase()">{{ question.difficultyLevel }}</span></td><td class="marks-cell">{{ question.marks }} <small>pts</small></td><td><div class="row-actions"><button type="button" class="icon-button" (click)="editQuestion(question)" aria-label="Edit question">✎</button><button type="button" class="icon-button danger-icon" (click)="deleteQuestion(question)" aria-label="Delete question">×</button></div></td></tr>
+                }</tbody>
+              </table></div>
+            } @else {
+              <div class="empty-state"><span class="empty-illustration">▤</span><strong>{{ questions.length ? 'No matching questions' : 'Your question bank is empty' }}</strong><p>{{ questions.length ? 'Try adjusting your search or filters.' : 'Add your first question to start building a reusable question bank.' }}</p>@if (!questions.length) { <button class="button button-primary" type="button" (click)="openNewQuestion()" [disabled]="!subjects.length">Add your first question</button> }</div>
+            }
+          </section>
+        }
+
+        @if (page === 'subjects') {
+          <div class="page-heading heading-with-action">
+            <div><span class="eyebrow">CURRICULUM</span><h1>Your subjects</h1><p>Give every question a home and keep your curriculum tidy.</p></div>
+            @if (isAdmin) { <button type="button" class="button button-primary" (click)="openNewSubject()"><span>＋</span> Add a subject</button> }
+          </div>
+          @if (subjects.length) {
+            <section class="subject-grid">
+              @for (subject of subjects; track subject.id) {
+                <article class="subject-card">
+                  <div class="subject-card-top"><span class="subject-symbol">{{ subject.name.charAt(0).toUpperCase() }}</span>@if (isAdmin) { <div class="row-actions"><button type="button" class="icon-button" (click)="editSubject(subject)" aria-label="Edit subject">✎</button><button type="button" class="icon-button danger-icon" (click)="deleteSubject(subject)" aria-label="Delete subject">×</button></div> }</div>
+                  <h2>{{ subject.name }}</h2><p>{{ subject.description || 'Add a description to help your team find this subject.' }}</p>
+                  <div class="subject-card-footer"><span>{{ questionCountFor(subject.id) }} questions</span><button type="button" class="text-button" (click)="questionSubjectFilter = '' + subject.id; navigate('questions')">View bank →</button></div>
+                </article>
+              }
+            </section>
+          } @else {
+            <section class="panel empty-state"><span class="empty-illustration">◫</span><strong>No subjects yet</strong><p>Create a subject before adding questions or generating a paper.</p>@if (isAdmin) { <button class="button button-primary" type="button" (click)="openNewSubject()">Add your first subject</button> }</section>
+          }
+        }
+
+        @if (page === 'generate') {
+          <div class="page-heading"><span class="eyebrow">PAPER BUILDER</span><h1>Make a paper that fits</h1><p>Choose your subject, set the marks, and let your question bank do the rest.</p></div>
+          <div class="builder-layout">
+            <section class="panel builder-panel">
+              <div class="builder-section-title"><span class="step-number">01</span><div><h2>Paper details</h2><p>Give this assessment a name and a subject.</p></div></div>
+              <div class="form-grid">
+                <div class="form-field form-full"><label class="field-label" for="paper-title">Paper title</label><input id="paper-title" maxlength="200" [(ngModel)]="paperTitle" placeholder="e.g. Midterm Assessment" /></div>
+                <div class="form-field"><label class="field-label" for="paper-subject">Subject</label><select id="paper-subject" [(ngModel)]="paperSubjectId" (ngModelChange)="onPaperSubjectChange()"><option [ngValue]="0">Select a subject</option>@for (subject of subjects; track subject.id) { <option [ngValue]="subject.id">{{ subject.name }}</option> }</select></div>
+                <div class="form-field"><label class="field-label" for="paper-difficulty">Difficulty</label><select id="paper-difficulty" [(ngModel)]="paperDifficulty"><option value="ANY">Any difficulty</option>@for (difficulty of difficulties; track difficulty) { <option [value]="difficulty">{{ difficulty.charAt(0) + difficulty.slice(1).toLowerCase() }}</option> }</select></div>
+                <div class="form-field"><label class="field-label" for="paper-total">Total marks</label><div class="input-suffix"><input id="paper-total" type="number" min="1" max="1000" [(ngModel)]="paperTotalMarks" (ngModelChange)="onTotalMarksChange()" /><span>marks</span></div></div>
+              </div>
+
+              <div class="builder-divider"></div>
+              <div class="builder-section-title"><span class="step-number">02</span><div><h2>Topic distribution</h2><p>Choose how many marks each topic should contribute.</p></div></div>
+              @if (allocations.length) {
+                <div class="allocation-list">
+                  @for (allocation of allocations; track allocation.topic) {
+                    <div class="allocation-row"><span class="allocation-topic"><span class="topic-dot"></span>{{ allocation.topic }}</span><div class="input-suffix allocation-input"><input type="number" min="0" [max]="paperTotalMarks" [(ngModel)]="allocation.marks" (ngModelChange)="onAllocationChange()" /><span>marks</span></div></div>
+                  }
+                </div>
+                <div class="allocation-total" [class.total-mismatch]="allocationTotalMismatch"><span>Total allocated</span><strong>{{ allocatedMarks }} <small>/ {{ paperTotalMarks }} marks</small></strong></div>
+              } @else {
+                <div class="inline-empty">{{ paperSubjectId ? 'Add questions with topics to this subject before setting topic distribution.' : 'Select a subject to see its available topics.' }}</div>
+              }
+              <div class="builder-footer"><span class="secure-note"><span>✳</span> Questions are selected randomly from your bank.</span><button type="button" class="button button-primary" (click)="generatePaper()" [disabled]="!canGenerate">Generate paper <span>→</span></button></div>
+            </section>
+            <aside class="builder-aside">
+              <section class="panel builder-summary"><span class="eyebrow">YOUR BLUEPRINT</span><h2>At a glance</h2><div class="summary-row"><span>Subject</span><strong>{{ selectedSubject?.name || 'Not selected' }}</strong></div><div class="summary-row"><span>Difficulty</span><strong>{{ paperDifficulty === 'ANY' ? 'Any level' : paperDifficulty }}</strong></div><div class="summary-row"><span>Topics</span><strong>{{ allocations.length }}</strong></div><div class="summary-row"><span>Total marks</span><strong>{{ paperTotalMarks }}</strong></div><div class="summary-note"><span>ⓘ</span> The generator checks your question bank and lets you know if it can't meet your criteria.</div></section>
+              @if (generatedPaper) {
+                <section class="panel generated-card"><span class="generated-check">✓</span><h2>Your paper is ready</h2><p>{{ generatedPaper.questions.length }} questions · {{ generatedPaper.totalMarks }} marks</p><button type="button" class="button button-outline button-wide" (click)="downloadPaper(generatedPaper)">↓ Download PDF</button><button type="button" class="button button-quiet button-wide word-download" (click)="downloadPaperWord(generatedPaper)">↓ Download Word</button><button type="button" class="subtle-button" (click)="generatedPaper = null">Build another</button></section>
+              }
+            </aside>
+          </div>
+        }
+
+        @if (page === 'papers') {
+          <div class="page-heading"><span class="eyebrow">YOUR ARCHIVE</span><h1>Paper history</h1><p>Revisit and download question papers you've already created.</p></div>
+          <section class="panel table-panel">
+            @if (papers.length) {
+              <div class="table-scroll"><table><thead><tr><th>PAPER</th><th>SUBJECT</th><th>CREATED</th><th>MARKS</th><th></th></tr></thead><tbody>
+                @for (paper of papers; track paper.id) {
+                  <tr><td><span class="paper-name-cell"><span class="paper-icon">▤</span><strong>{{ paper.title }}</strong></span></td><td>{{ paper.subjectName || subjectName(paper.subjectId) }}</td><td>{{ paper.generatedDate ? (paper.generatedDate | date:'mediumDate') : '—' }}</td><td class="marks-cell">{{ paper.totalMarks }} <small>pts</small></td><td><div class="row-actions"><button type="button" class="button button-outline button-small" (click)="downloadPaper(paper)">PDF</button><button type="button" class="button button-quiet button-small" (click)="downloadPaperWord(paper)">Word</button></div></td></tr>
+                }
+              </tbody></table></div>
+            } @else {
+              <div class="empty-state"><span class="empty-illustration">◷</span><strong>Nothing in your archive yet</strong><p>Generated papers are saved here, ready to download whenever you need them.</p><button type="button" class="button button-primary" (click)="navigate('generate')">Create a paper</button></div>
+            }
+          </section>
+        }
+        @if (page === 'users' && isAdmin) {
+          <div class="page-heading heading-with-action">
+            <div><span class="eyebrow">ADMINISTRATION</span><h1>User management</h1><p>Create faculty and administrator accounts and manage workspace access.</p></div>
+            <button type="button" class="button button-primary" (click)="openNewUser()"><span>＋</span> Add a user</button>
+          </div>
+          <section class="panel table-panel">
+            @if (users.length) {
+              <div class="table-scroll"><table><thead><tr><th>USERNAME</th><th>ROLE</th><th><span class="visually-hidden">Actions</span></th></tr></thead><tbody>
+                @for (user of users; track user.id) {
+                  <tr><td><span class="subject-text">{{ user.username }}</span></td><td><select [ngModel]="user.role" [ngModelOptions]="{standalone: true}" [disabled]="user.username === auth.username" (ngModelChange)="updateUserRole(user, $event)"><option value="FACULTY">Faculty</option><option value="ADMIN">Administrator</option></select></td><td><div class="row-actions"><button type="button" class="icon-button danger-icon" [disabled]="user.username === auth.username" (click)="deleteUser(user)" aria-label="Delete user">×</button></div></td></tr>
+                }
+              </tbody></table></div>
+            } @else {
+              <div class="empty-state"><span class="empty-illustration">♙</span><strong>No user accounts found</strong><p>Create an account for a faculty member or administrator.</p><button type="button" class="button button-primary" (click)="openNewUser()">Add a user</button></div>
+            }
+          </section>
+        }
+        @if (busy) { <div class="loading-indicator"><span class="spinner"></span> Loading your workspace…</div> }
+        <footer class="page-footer"><span>Paperly</span><span>Made for educators, with care.</span></footer>
+      </div>
+    </main>
+  </div>
+}
+
+@if (questionDialogOpen) {
+  <div class="modal-backdrop" (click)="questionDialogOpen = false">
+    <section class="modal-card" role="dialog" aria-modal="true" aria-labelledby="question-dialog-title" (click)="$event.stopPropagation()">
+      <div class="modal-heading"><div><span class="eyebrow">{{ editingQuestionId ? 'EDIT QUESTION' : 'QUESTION BANK' }}</span><h2 id="question-dialog-title">{{ editingQuestionId ? 'Update your question' : 'Add a question' }}</h2></div><button type="button" class="icon-button" (click)="questionDialogOpen = false" aria-label="Close dialog">×</button></div>
+      <form (ngSubmit)="saveQuestion()" #questionEditor="ngForm">
+        <label class="field-label" for="question-text">Question</label><textarea id="question-text" name="questionText" maxlength="5000" [(ngModel)]="questionForm.questionText" required rows="4" placeholder="Write the question…"></textarea>
+        <div class="form-grid modal-grid"><div class="form-field"><label class="field-label" for="question-subject">Subject</label><select id="question-subject" name="subjectId" [(ngModel)]="questionForm.subjectId" required>@for (subject of subjects; track subject.id) { <option [ngValue]="subject.id">{{ subject.name }}</option> }</select></div><div class="form-field"><label class="field-label" for="question-topic">Topic</label><input id="question-topic" name="topic" maxlength="200" [(ngModel)]="questionForm.topic" required placeholder="e.g. Algebra" /></div><div class="form-field"><label class="field-label" for="question-difficulty">Difficulty</label><select id="question-difficulty" name="difficultyLevel" [(ngModel)]="questionForm.difficultyLevel">@for (difficulty of difficulties; track difficulty) { <option [value]="difficulty">{{ difficulty }}</option> }</select></div><div class="form-field"><label class="field-label" for="question-marks">Marks</label><input id="question-marks" name="marks" type="number" min="1" max="1000" [(ngModel)]="questionForm.marks" required /></div></div>
+        <div class="modal-actions"><button type="button" class="button button-quiet" (click)="questionDialogOpen = false">Cancel</button><button type="submit" class="button button-primary" [disabled]="questionEditor.invalid">{{ editingQuestionId ? 'Save changes' : 'Add question' }}</button></div>
+      </form>
+    </section>
+  </div>
+}
+
+@if (userDialogOpen) {
+  <div class="modal-backdrop" (click)="userDialogOpen = false">
+    <section class="modal-card modal-card-narrow" role="dialog" aria-modal="true" aria-labelledby="user-dialog-title" (click)="$event.stopPropagation()">
+      <div class="modal-heading"><div><span class="eyebrow">ADMINISTRATION</span><h2 id="user-dialog-title">Create user account</h2></div><button type="button" class="icon-button" (click)="userDialogOpen = false" aria-label="Close dialog">×</button></div>
+      <form (ngSubmit)="saveUser()" #userEditor="ngForm">
+        <label class="field-label" for="user-username">Username</label><input id="user-username" name="username" [(ngModel)]="userForm.username" required minlength="3" maxlength="80" autocomplete="off" />
+        <label class="field-label modal-label-spaced" for="user-password">Temporary password</label><input id="user-password" name="password" [(ngModel)]="userForm.password" required minlength="8" maxlength="72" type="password" autocomplete="new-password" />
+        <label class="field-label modal-label-spaced" for="user-role">Role</label><select id="user-role" name="role" [(ngModel)]="userForm.role"><option value="FACULTY">Faculty</option><option value="ADMIN">Administrator</option></select>
+        <div class="modal-actions"><button type="button" class="button button-quiet" (click)="userDialogOpen = false">Cancel</button><button type="submit" class="button button-primary" [disabled]="userEditor.invalid">Create account</button></div>
+      </form>
+    </section>
+  </div>
+}
+
+@if (subjectDialogOpen) {
+  <div class="modal-backdrop" (click)="subjectDialogOpen = false">
+    <section class="modal-card modal-card-narrow" role="dialog" aria-modal="true" aria-labelledby="subject-dialog-title" (click)="$event.stopPropagation()">
+      <div class="modal-heading"><div><span class="eyebrow">CURRICULUM</span><h2 id="subject-dialog-title">{{ editingSubjectId ? 'Edit subject' : 'Add a subject' }}</h2></div><button type="button" class="icon-button" (click)="subjectDialogOpen = false" aria-label="Close dialog">×</button></div>
+      <form (ngSubmit)="saveSubject()" #subjectEditor="ngForm"><label class="field-label" for="subject-name">Subject name</label><input id="subject-name" name="name" [(ngModel)]="subjectForm.name" required maxlength="100" placeholder="e.g. Mathematics" /><label class="field-label modal-label-spaced" for="subject-description">Description <span class="optional-label">Optional</span></label><textarea id="subject-description" name="description" [(ngModel)]="subjectForm.description" rows="3" maxlength="500" placeholder="A short description of this subject"></textarea><div class="modal-actions"><button type="button" class="button button-quiet" (click)="subjectDialogOpen = false">Cancel</button><button type="submit" class="button button-primary" [disabled]="subjectEditor.invalid">{{ editingSubjectId ? 'Save changes' : 'Create subject' }}</button></div></form>
+    </section>
+  </div>
+}
+
+<router-outlet></router-outlet>
