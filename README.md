@@ -65,7 +65,7 @@ npm install
 npm start
 ```
 
-Open **http://localhost:4200**. The Angular development proxy forwards API requests to the backend at **http://localhost:2715**.
+
 
 ## Workspace pages
 
