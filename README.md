@@ -1,16 +1,44 @@
-# Paperly Question Paper Generator
+<div align="center">
 
-Paperly is a full-stack question-paper generator for administrators and faculty. It stores a categorized question bank, builds papers to exact marks using subject/topic/difficulty criteria, saves generated papers, and exports them to PDF or Word.
+# Paperly
 
-## Features
+### Question Paper Generator
 
-- JWT sign-in with administrator and faculty roles
-- Admin user creation, role management, and deletion safeguards
-- Subject and question management with subject/topic/difficulty filters
-- Paper generation with exact total marks and per-topic allocations
-- Randomized question selection from matching question-bank inventory
-- User-specific paper history and PDF/DOCX downloads
-- MySQL as the application database; H2 is used only by automated tests
+Build balanced, randomized question papers from a categorized question bank.
+Manage subjects and users, configure topic-wise marks, and export ready-to-use papers.
+
+**Angular** · **Spring Boot** · **Java 17** · **MySQL 8**
+
+</div>
+
+---
+
+## Overview
+
+Paperly is a full-stack workspace for faculty and administrators. It organizes questions by subject, topic, difficulty, and marks, then generates papers that match the selected criteria.
+
+## What you can do
+
+| Area | Capabilities |
+|---|---|
+| **Question bank** | Add, edit, search, filter, and remove questions by subject, topic, and difficulty. |
+| **Subjects** | Create and maintain the subjects that organize your question library. |
+| **Paper builder** | Generate randomized papers with exact total marks, topic allocations, and optional difficulty selection. |
+| **Paper archive** | Review your generated papers and download PDF or Word (DOCX) copies. |
+| **Administrator dashboard** | Create faculty and administrator accounts, change user roles, and manage access. |
+| **Access control** | Protect user management for administrators and safeguard the last administrator account. |
+
+The sample question library includes **at least 15 questions for every seeded topic** across Mathematics, Physics, and Literature.
+
+## Technology
+
+| Layer | Stack |
+|---|---|
+| Frontend | Angular, TypeScript, HTML, CSS |
+| Backend | Java 17, Spring Boot, Spring Security |
+| Persistence | MySQL 8, Spring Data JPA, Hibernate |
+| Authentication | JWT, BCrypt |
+| Document exports | iText PDF, Apache POI DOCX |
 
 ## Requirements
 
@@ -18,99 +46,91 @@ Paperly is a full-stack question-paper generator for administrators and faculty.
 - Node.js and npm
 - MySQL Server 8.x
 
-## Run locally (Windows PowerShell)
+## Run locally
 
-Create the schema and application user in MySQL before starting the backend. The schema script creates the database and all tables:
+Run the backend and frontend in separate PowerShell terminals from the project root.
 
-```powershell
-cmd.exe /c "mysql -u root -p < .\backend\src\main\resources\db\schema-mysql.sql"
-```
-
-Create the dedicated application account in MySQL, replacing the placeholder with your own strong password:
-
-```sql
-CREATE USER 'paperly_app'@'localhost' IDENTIFIED BY 'replace-with-a-strong-password';
-GRANT ALL PRIVILEGES ON paperly.* TO 'paperly_app'@'localhost';
-```
-
-The schema is also checked and updated by Hibernate at application startup. Set the database password and JWT secret in the backend terminal before launching. The URL, username, and MySQL driver default to `jdbc:mysql://localhost:3306/paperly`, `paperly_app`, and `com.mysql.cj.jdbc.Driver`:
-
-```powershell
-$env:DB_PASSWORD = "replace-with-a-strong-password"
-$env:JWT_SECRET = "replace-with-a-random-secret-at-least-32-bytes-long"
-```
-
-Open two terminals from the project root.
-
-Backend:
+### Backend
 
 ```powershell
 cd .\backend
 mvn spring-boot:run
 ```
 
-Frontend:
+### Frontend
 
 ```powershell
 cd .\frontend
+npm install
 npm start
 ```
 
-Open `http://localhost:4200`. The Angular development proxy sends `/api` requests to the backend at `http://localhost:2715` (the port configured in `backend/src/main/resources/application.properties`). Restart `npm start` after changing the proxy configuration.
+Open **http://localhost:4200**. The Angular development proxy forwards API requests to the backend at **http://localhost:2715**.
 
-The backend creates development accounts and sample subjects/questions on an empty database. Override seeded account settings before the first start using `PAPERLY_ADMIN_USERNAME`, `PAPERLY_ADMIN_PASSWORD`, `PAPERLY_FACULTY_USERNAME`, and `PAPERLY_FACULTY_PASSWORD`. The values are read only when accounts are first seeded. Do not use development credentials or the default JWT secret in production.
+## Workspace pages
 
-The default development sign-ins are `admin` / `Admin@123` and `faculty` / `Faculty@123`; change these before using real or shared data.
+| Page | Route | Access |
+|---|---|---|
+| Sign in | `/login` | All users |
+| Overview | `/overview` | Faculty and administrators |
+| Question bank | `/questions` | Faculty and administrators |
+| Subjects | `/subjects` | Faculty and administrators |
+| Generate paper | `/generate` | Faculty and administrators |
+| Paper history | `/papers` | Faculty and administrators |
+| User management | `/users` | Administrators only |
 
-## Database behavior
+### Administrator dashboard
 
-The running application uses MySQL by default. Override the database connection with environment variables if your MySQL host, database name, or account differs:
+Use **User management** to view accounts, add faculty or administrator users with a temporary password, change another user's role, and remove eligible accounts. Administrators cannot remove or change their own account role; the last administrator cannot be demoted or deleted. Accounts with generated papers are protected from deletion.
 
-```powershell
-$env:DB_URL = "jdbc:mysql://localhost:3306/paperly"
-$env:DB_USERNAME = "root"
-$env:DB_PASSWORD = "your-local-password"
-$env:DB_DRIVER = "com.mysql.cj.jdbc.Driver"
-$env:JWT_SECRET = "replace-with-a-random-secret-at-least-32-bytes-long"
-mvn spring-boot:run
+## Sample question bank
+
+The starter data covers three subjects and nine topics:
+
+| Subject | Topics |
+|---|---|
+| Mathematics | Algebra · Calculus · Geometry |
+| Physics | Mechanics · Electricity · Optics |
+| Literature | Drama · Prose · Poetry |
+
+Each listed topic has at least 15 sample questions. The sample-data script is safe to run again and avoids inserting duplicate questions.
+
+## Project layout
+
+```text
+backend/
+├── src/main/java/com/paperly/       Spring Boot API and application services
+├── src/main/resources/
+│   ├── application.properties       Application and MySQL configuration
+│   └── db/
+│       ├── schema-mysql.sql         MySQL schema
+│       └── sample-questions-mysql.sql Sample question bank
+├── src/test/                        Backend tests
+└── scripts/                         MySQL backup utilities
+
+frontend/
+├── src/app/                         Angular UI, routing, auth, and API client
+└── proxy.conf.json                  Development API proxy (port 2715)
 ```
 
-The MySQL JDBC driver is included. Hibernate updates the schema using JPA mappings. H2 is configured only for automated tests and is not the application database. Configure database backups and a production migration strategy before deploying.
+## Validate the project
 
-## Daily MySQL backups
-
-The backend includes a PowerShell backup script that creates a consistent SQL dump and removes dumps older than 30 days. Backups are stored under `backend\backups\` and excluded from version control.
-
-The backup script currently uses the existing encrypted `paperly-admin` MySQL login path. This makes setup possible without exposing a password, but grants the scheduled backup the administrator account's database privileges. For production, create a dedicated read-only MySQL backup user and change the `LoginPath` default in `backend\scripts\backup-mysql.ps1` and the login check in `backend\scripts\install-daily-backup-task.ps1` to its configured login path.
-
-Install the daily 02:00 Windows Task Scheduler task:
-
-```powershell
-.\backend\scripts\install-daily-backup-task.ps1 -Time "02:00"
-```
-
-The task runs as the current Windows user and requires that user to be signed in, so the MySQL login path is available. To create and verify a backup immediately, run:
-
-```powershell
-.\backend\scripts\backup-mysql.ps1
-```
-
-To restore a dump, use a MySQL account with database creation privileges:
-
-```powershell
-cmd.exe /c "mysql --login-path=paperly-backup < .\backend\backups\paperly-YYYYMMDD-HHMMSS.sql"
-```
-
-Backups contain question content and user password hashes. Keep the backup folder on protected storage and copy backups to a separate, access-controlled location for disaster recovery. The scheduled task runs as the current Windows user and only while that user is signed in; the MySQL login path is encrypted for that user.
-
-## Verification
+### Backend tests
 
 ```powershell
 cd .\backend
 mvn test
-cd ..\frontend
+```
+
+### Frontend tests and production build
+
+```powershell
+cd .\frontend
 npm test -- --watch=false --browsers=ChromeHeadless
 npm run build
 ```
 
-See [backend/README.md](./backend/README.md) for API details and [frontend/README.md](./frontend/README.md) for Angular CLI notes.
+## Documentation
+
+- [Backend setup and API details](./backend/README.md)
+- [Frontend setup and routes](./frontend/README.md)

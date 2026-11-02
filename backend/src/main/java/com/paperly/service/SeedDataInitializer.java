@@ -1,10 +1,13 @@
 package com.paperly.service;
 
 import java.util.List;
+import javax.sql.DataSource;
 
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
 import org.springframework.stereotype.Component;
 
 import com.paperly.config.AppProperties;
@@ -24,17 +27,20 @@ public class SeedDataInitializer implements ApplicationRunner {
     private final QuestionRepository questionRepository;
     private final PasswordEncoder passwordEncoder;
     private final AppProperties appProperties;
+    private final DataSource dataSource;
 
     public SeedDataInitializer(UserRepository userRepository,
                               SubjectRepository subjectRepository,
                               QuestionRepository questionRepository,
                               PasswordEncoder passwordEncoder,
-                              AppProperties appProperties) {
+                              AppProperties appProperties,
+                              DataSource dataSource) {
         this.userRepository = userRepository;
         this.subjectRepository = subjectRepository;
         this.questionRepository = questionRepository;
         this.passwordEncoder = passwordEncoder;
         this.appProperties = appProperties;
+        this.dataSource = dataSource;
     }
 
     @Override
@@ -63,5 +69,8 @@ public class SeedDataInitializer implements ApplicationRunner {
                 new Question("Analyse the symbolism of the road in Frost's 'The Road Not Taken'", literature, "Poetry", DifficultyLevel.HARD, 12)
             ));
         }
+
+        new ResourceDatabasePopulator(new ClassPathResource("db/sample-questions-mysql.sql"))
+            .execute(dataSource);
     }
 }
